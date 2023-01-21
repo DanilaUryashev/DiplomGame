@@ -66,12 +66,7 @@ public class HealthBar : MonoBehaviour
         playerHealth -= Time.deltaTime * damage;
         fill = playerHealth * 0.01f;
     }
-    //public Transform Interface;
-    //public Transform Cam;
-    //void TransformInterface()
-    //{
-    //    Interface.position = new Vector3(Cam.position.x, Cam.position.y, Cam.position.z + 7);
-    //}
+
 
 }
 

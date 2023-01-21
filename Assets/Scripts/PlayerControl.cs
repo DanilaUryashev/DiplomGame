@@ -11,6 +11,8 @@ public class PlayerControl : MonoBehaviour
     void Start()
     {
         swordHand.SetActive(false);
+        swordSpine.SetActive(true);
+        attackPoint.SetActive(false);
         rb = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
         checkRadius = GroundCheck.GetComponent<CircleCollider2D>().radius;
@@ -18,18 +20,32 @@ public class PlayerControl : MonoBehaviour
         realSpeed = turnSpeed;
         WallCheckRadiusDown = WallCheckDown.GetComponent<CircleCollider2D>().radius;
     }
-
+    public bool asd;
     // Update is called once per frame
     void Update()
     {
-        run();
+        asd = jumpLock;
         walk();
-        jump();
-        runningSlide();
+        run();
         crouch();
-        EquipSword();
+        if (Time.time >= nextTimeEqp)
+        {
+            if (Input.GetKey(KeyCode.Q))
+            {
+                EquipSword();
+                nextTimeEqp = Time.time + 1f / EqpRate;
+            }
+        }
+        MoveY = rb.velocity.y;
+        if (MoveY < 0)
+        {
+            anim.SetBool("fail", true);
+        }
+        else
+        {
+            anim.SetBool("fail", false);
 
-
+        }
     }
     private void FixedUpdate()
     {
@@ -40,21 +56,18 @@ public class PlayerControl : MonoBehaviour
         Checkflip();
     }
     public float MoveY;
+    public bool jumping = false;
+
     void jump()
     {
-        MoveY = rb.velocity.y;
-        if (Input.GetKeyDown(KeyCode.Space) && onGround && !jumpLock)
-        {
-
+        if (onGround && !jumpLock)
+        { 
             rb.AddForce(Vector2.up * jumpForce);
-        }
-        else
-        {
-
-        }
-        if (MoveY < 0) { anim.SetBool("fail", true); }
-        else anim.SetBool("fail", false);
+        }       
     }
+
+
+
     public static float horizontal;
     public float turnSpeed = 3;
     public float fastSpeed = 5;
@@ -63,6 +76,7 @@ public class PlayerControl : MonoBehaviour
     public bool speedLock;
     void walk()
     {
+        
         if (!blockMoveXYforLedge) 
         { 
                 horizontal = Input.GetAxisRaw("Horizontal") * realSpeed * Time.deltaTime;
@@ -71,17 +85,19 @@ public class PlayerControl : MonoBehaviour
                 transform.Translate(0, 0, horizontal);
                 if (horizontal > 0 && !faceRight)
                 {
-            
                     flip();
-           
                 }
                 else if (horizontal < 0 && faceRight)
                 {
-            
                     flip();
-
                 }
+
         }
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            jump();
+        }
+       
 
 
     }
@@ -95,7 +111,7 @@ public class PlayerControl : MonoBehaviour
     private bool crouching;
     void crouch()
     {
-        if (Input.GetKey(KeyCode.C))
+        if (Input.GetKey(KeyCode.C)&& !Input.GetKey(KeyCode.LeftShift))
         {
             anim.SetBool("crouch", true);
             poseStand.enabled = false;
@@ -116,29 +132,32 @@ public class PlayerControl : MonoBehaviour
     }
     void run()
     {
-        if (Input.GetKey(KeyCode.LeftShift)&&!crouching)
+
+
+        if (Input.GetKey(KeyCode.LeftShift) && !crouching)
         {
-            anim.SetBool("run", true);
-            if(MoveY==0)
-            realSpeed = fastSpeed;
-            if (Input.GetKey(KeyCode.Space))
+            if (Input.GetKeyDown(KeyCode.LeftShift))
             {
-                speedLock = true;
-            }
-            if (Input.GetKey(KeyCode.C))
-            {
-                speedLock = true;
+                anim.SetBool("run", true);
+                if (MoveY == 0)
+                    realSpeed = fastSpeed;
+                if (Input.GetKey(KeyCode.Space))
+                { }
+                
             }
         }
-            
+           
         else
         {
-            anim.SetBool("run", false);;
-            
+            anim.SetBool("run", false); ;
+
             if (!speedLock) realSpeed = turnSpeed;
             else if (speedLock && onGround) speedLock = false;
             else realSpeed = fastSpeed;
+            anim.SetBool("run", false);
         }
+        runningSlide();
+
     }
    
     public float jumpForce = 350f;
@@ -225,18 +244,27 @@ public class PlayerControl : MonoBehaviour
             offsetCalculateAndCorrect();
         }
     }
+    public float slideSpeed;
     void runningSlide()
     {
-        if (Input.GetKey(KeyCode.LeftShift)&& Input.GetKey(KeyCode.C))
+        if (Input.GetKey(KeyCode.C))
         {
-            transform.Translate(0, 0, horizontal);
-            blockMoveXYforLedge = true;
-                anim.SetBool("runningSlide", true);
+            jumpLock = true;
+            if (Input.GetKeyDown(KeyCode.C))
+            {
+
+                speedLock = true;
+                anim.SetTrigger("runnigSlide");
+                slideSpeed = horizontal;
+                realSpeed -= 4;
+            }
         }
-        else { anim.SetBool("runningSlide", false); }
+        
+        
     }
     void FinishSlide()
     {
+        jumpLock = false;
         blockMoveXYforLedge = false;
         rb.gravityScale = 1;
     }
@@ -274,24 +302,52 @@ public class PlayerControl : MonoBehaviour
         rb.gravityScale = 1;
        
     }
-   public bool eqpSword=false;
+    public bool eqpSwordStatus=false;
+    private int eqpSword = 0;
+
+    public float EqpRate = 2f;
+    public float nextTimeEqp = 0f;
     void EquipSword()
     {
-        if (Input.GetKey(KeyCode.Q))
+        eqpSword += 1;
+
+        if (eqpSword == 1 && eqpSwordStatus == false)
         {
-            eqpSword = true;
-            
+            eqpSwordStatus = true;
+            anim.SetBool("EquipSword", eqpSwordStatus);
+            anim.SetTrigger("EqpSwordTriger");
+        }
+        else if ( eqpSword == 2 && eqpSwordStatus == true)
+        {
+            eqpSwordStatus = false;
+            anim.SetBool("EquipSword", eqpSwordStatus);
+            anim.SetTrigger("EqpSwordTriger");
+            eqpSword = 0;
+        }
+       
+
+    }
+    
+    void eqpSwordAnimationController()
+    {
+        if (eqpSwordStatus)
+        {
             swordSpine.SetActive(false);
             swordHand.SetActive(true);
-
+            attackPoint.SetActive(true);
         }
-        anim.SetBool("EquipSword", eqpSword);
-
+        else
+        {
+            attackPoint.SetActive(false);
+            swordSpine.SetActive(true);
+            swordHand.SetActive(false);
+        }
+       
     }
 
 
-
     public GameObject swordSpine;
+    public GameObject attackPoint;
     public GameObject swordHand;
 
     private void OnDrawGizmos()

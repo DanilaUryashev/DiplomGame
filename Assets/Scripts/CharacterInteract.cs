@@ -42,7 +42,7 @@ public class CharacterInteract : MonoBehaviour
         {
 
             transform.position = new Vector3(respawn.position.x, respawn.position.y, respawn.position.z);
-            PlayerControl.blockMoveXYforLedge = true;
+             PlayerControl.blockMoveXYforLedge = true;
             PlayerControl.jumpLock = true;
             rb.gravityScale = 1;
         }

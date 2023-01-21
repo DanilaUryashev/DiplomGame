@@ -13,6 +13,9 @@ scopes = {
 	"last_search.DE949528" = "render pipeline"
 	"OpenInspectorPreview.DE949528" = "0"
 	"currentGroup.DE949528" = "all"
+	"last_search.DA949528" = "Lock"
+	"OpenInspectorPreview.DA949528" = "0"
+	"currentGroup.DA949528" = "all"
 }
 providers = {
 	adb = {
@@ -59,6 +62,7 @@ providers = {
 objectSelectors = {
 }
 recentSearches = [
+	"jumpLock"
 	"render pipeline"
 ]
 searchItemFavorites = [
