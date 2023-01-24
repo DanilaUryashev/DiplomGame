@@ -46,6 +46,7 @@ public class PlayerControl : MonoBehaviour
             anim.SetBool("fail", false);
 
         }
+        Climb();
     }
     private void FixedUpdate()
     {
@@ -60,9 +61,10 @@ public class PlayerControl : MonoBehaviour
 
     void jump()
     {
-        if (onGround && !jumpLock)
-        { 
+        if (onGround && !jumpLock && !onSlide)
+        {
             rb.AddForce(Vector2.up * jumpForce);
+           // rb.velocity = new Vector2(0, 10);
         }       
     }
 
@@ -71,13 +73,14 @@ public class PlayerControl : MonoBehaviour
     public static float horizontal;
     public float turnSpeed = 3;
     public float fastSpeed = 5;
+    public float slideSpeed = 6;
     public float realSpeed;
     public float MoveX;
     public bool speedLock;
     void walk()
     {
         
-        if (!blockMoveXYforLedge) 
+        if (!blockMoveXYforLedge&& !onSlide) 
         { 
                 horizontal = Input.GetAxisRaw("Horizontal") * realSpeed * Time.deltaTime;
                 MoveX = Mathf.Abs(horizontal);
@@ -139,11 +142,12 @@ public class PlayerControl : MonoBehaviour
             if (Input.GetKeyDown(KeyCode.LeftShift))
             {
                 anim.SetBool("run", true);
-                if (MoveY == 0)
-                    realSpeed = fastSpeed;
-                if (Input.GetKey(KeyCode.Space))
-                { }
-                
+           
+                realSpeed = fastSpeed;                
+            }
+            if (Input.GetKey(KeyCode.C))
+            {
+                runningSlide();
             }
         }
            
@@ -156,10 +160,10 @@ public class PlayerControl : MonoBehaviour
             else realSpeed = fastSpeed;
             anim.SetBool("run", false);
         }
-        runningSlide();
-
+       
     }
-   
+
+
     public float jumpForce = 350f;
    
     void flip()
@@ -169,7 +173,7 @@ public class PlayerControl : MonoBehaviour
         
         
     }
-    private float fliping = 1;
+    public static float fliping = 1;
     void Checkflip()
     {
         if (faceRight)
@@ -237,36 +241,30 @@ public class PlayerControl : MonoBehaviour
         else { onLedge = false; }
         anim.SetBool("onLedge", onLedge);
         
-        if ((onLedge && Input.GetAxisRaw("Vertical") != -1) || blockMoveXYforLedge)
+        if ((onLedge && (Input.GetKey(KeyCode.Space) || MoveY < 0)))
         {
             rb.gravityScale = 0;
+            climbing = true;
             rb.velocity = new Vector2(0, 0);
+            anim.SetTrigger("Climbing");
             offsetCalculateAndCorrect();
         }
     }
-    public float slideSpeed;
-    void runningSlide()
-    {
-        if (Input.GetKey(KeyCode.C))
-        {
-            jumpLock = true;
-            if (Input.GetKeyDown(KeyCode.C))
-            {
+    private bool onSlide = false;
+    public float SlidingForce=4f;
+    public Collider2D SlidingPose;
 
-                speedLock = true;
-                anim.SetTrigger("runnigSlide");
-                slideSpeed = horizontal;
-                realSpeed -= 4;
-            }
-        }
-        
-        
-    }
-    void FinishSlide()
+    private bool climbing = false;
+
+    void Climb()
     {
-        jumpLock = false;
-        blockMoveXYforLedge = false;
-        rb.gravityScale = 1;
+        if (climbing)
+        {
+            blockMoveXYforLedge = true;
+            poseStand.enabled = false;
+            poseSquat.enabled = false;
+            SlidingPose.enabled = false;
+        }
     }
 
     public float minCorrectDistance = 0.01f;
@@ -281,13 +279,14 @@ public class PlayerControl : MonoBehaviour
         ledgeRayCorrectY,
         Ground
         ).distance;
-        if (offsetY > minCorrectDistance * 1.5f)
+        if (offsetY > minCorrectDistance * 1.5f )
         {
-            transform.position = new Vector3(transform.position.x, transform.position.y - offsetY +
+            transform.position = new Vector3(transform.position.x+ 0.3183f, transform.position.y - offsetY +
             minCorrectDistance, transform.position.z);
-            blockMoveXYforLedge = true;
-            jumpLock = true;
-
+            // blockMoveXYforLedge = true;
+            // jumpLock = true;
+           
+            
         }
     }
     public static bool blockMoveXYforLedge;
@@ -300,9 +299,39 @@ public class PlayerControl : MonoBehaviour
         anim.Play("idle");
         blockMoveXYforLedge = false;
         rb.gravityScale = 1;
-       
+        climbing = false;
+
+
     }
-    public bool eqpSwordStatus=false;
+
+    void runningSlide()
+    {
+        if (Input.GetKeyDown(KeyCode.C))
+        {
+            poseStand.enabled = false;
+            poseSquat.enabled = false;
+            SlidingPose.enabled = true;
+            onSlide = true;
+            speedLock = true;
+            anim.SetTrigger("runnigSlide");
+            rb.AddForce(Vector2.right * SlidingForce * fliping * 100);
+
+        }
+
+    }
+    void FinishSlide()
+    {
+
+        SlidingPose.enabled = false;
+        speedLock = false;
+        onSlide = false;
+        jumpLock = false;
+        blockMoveXYforLedge = false;
+        rb.gravityScale = 1;
+    }
+
+
+    public static bool eqpSwordStatus =false;
     private int eqpSword = 0;
 
     public float EqpRate = 2f;
