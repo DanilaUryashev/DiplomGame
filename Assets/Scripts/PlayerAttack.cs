@@ -32,7 +32,7 @@ public class PlayerAttack : MonoBehaviour
                // nextAttackTime = Time.time + 2f / AttackRate;
             }
         }
-        fireGun();
+      //  fireGun();
 
 
 
@@ -71,18 +71,18 @@ public class PlayerAttack : MonoBehaviour
     {
         attackReady = true;
     }
-    public Transform bulletspawn;
-    public Rigidbody2D rbBullet;
-    void fireGun()
-    {
+    //public Transform bulletspawn;
+    //public Rigidbody2D rbBullet;
+    //void fireGun()
+    //{
         
-        if (Input.GetMouseButton(1))
-        {
-            anim.SetTrigger("FireGun");
-            rbBullet.AddForce((Vector2.right * 1f * PlayerControl.fliping * 100));
+    //    if (Input.GetMouseButton(1))
+    //    {
+    //        anim.SetTrigger("FireGun");
+    //        rbBullet.AddForce((Vector2.right * 1f * PlayerControl.fliping * 100));
 
-        }
-    }
+    //    }
+    //}
 
 
 
